@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TransportType {
+  DANFO
+  KEKE
+  KOROPE
+  RIDE
+  BRT
+  BIKE
+  MARUWA
+  TAXI
+  UBER
+  WALKING
+}
+
+enum ReportSource {
+  USER
+  CSV_SEED
+}
+
+enum LocationType {
+  BUS_STOP
+  LANDMARK
+  AREA
+  ROAD
+  MARKET
+  SCHOOL
+  HOSPITAL
+  PARK
+  FERRY_TERMINAL
+  OTHER
+}
+
+model Location {
+  id          String        @id @default(uuid())
+  name        String
+  type        LocationType
+  latitude    Float
+  longitude   Float
+
+  osmId       String?       @unique
+  osmType     String?
+
+  description String?
+  lga         String?
+  area        String?
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  fareReports   FareReport[]
+  fareSnapshots RouteFareSnapshot[]
+
+  @@index([name])
+  @@index([type])
+  @@index([lga])
+}
+
+model FareReport {
+  id             String         @id @default(uuid())
+  fromLocation   Location       @relation(fields: [fromLocationId], references: [id])
+  fromLocationId String
+  toName         String
+  transportType  TransportType
+  amountPaid     Int
+  rawAmountText  String?
+  routeDescription String?
+  sourceRef      String?        @unique
+  source         ReportSource   @default(USER)
+  reportedAt     DateTime       @default(now())
+
+  @@index([fromLocationId, toName, transportType])
+  @@index([reportedAt])
+}
+
+model RouteFareSnapshot {
+  id                String         @id @default(uuid())
+  fromLocation      Location       @relation(fields: [fromLocationId], references: [id])
+  fromLocationId    String
+  toName            String
+  transportType     TransportType
+
+  minFare           Int
+  maxFare           Int
+  typicalFare       Int            // median
+  sampleSize        Int            // reports used after filtering
+  outliersExcluded  Int
+  lastCalculatedAt  DateTime       @updatedAt
+
+  @@unique([fromLocationId, toName, transportType])
+  @@index([toName])
+}
