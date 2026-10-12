@@ -33,3 +33,12 @@ Route search interface
 Fare estimation
 Community transport data collection
 Responsive mobile-first design
+
+ Backend
+NestJS
+PostgreSQL
+Prisma ORM
+Redis
+Mapbox API
+Cloudinary
+Better Auth
